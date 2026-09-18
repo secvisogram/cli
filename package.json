@@ -1,0 +1,39 @@
+{
+  "name": "@secvisogram/cli",
+  "version": "1.0.0",
+  "description": "CLI tool for rendering CSAF documents to HTML",
+  "keywords": [
+    "CSAF",
+    "Common Security Advisory Framework",
+    "Secvisogram"
+  ],
+  "license": "Apache-2.0",
+  "author": "eXXcellent solutions GmbH",
+  "repository": {
+    "url": "https://github.com/secvisogram/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/secvisogram/cli/issues"
+  },
+  "homepage": "https://github.com/secvisogram/cli#readme",
+  "bin": {
+    "secvisogram-render": "./bin/cli.js"
+  },
+  "files": [
+    "bin/**/*.js"
+  ],
+  "type": "module",
+  "scripts": {
+    "pretest": "tsc -b .",
+    "test": "prettier --check . && vitest run"
+  },
+  "dependencies": {
+    "@secvisogram/html-template": "file:../html-template"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.5",
+    "prettier": "^3.9.8",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  }
+}
