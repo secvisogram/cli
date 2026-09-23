@@ -22,7 +22,15 @@ const args = parseArgs({
 })
 
 const [cmd] = args.positionals
-const argv = process.argv.slice(2).filter((a) => a !== cmd)
+// Pass through everything after the command token, unmodified. We can't
+// just filter process.argv.slice(2) for values equal to `cmd` (as before) -
+// that would also strip any option *value* that happens to equal the
+// command name, e.g. `render -o render` would lose the "render" value for
+// `-o`. Since `cmd` is always args.positionals[0], and parseArgs guarantees
+// positionals appear in argv in the same relative order they were given,
+// the command token is simply the first occurrence of `cmd` in argv.
+const cmdIndex = process.argv.slice(2).indexOf(cmd)
+const argv = process.argv.slice(2).filter((_, i) => i !== cmdIndex)
 
 if (args.values.version) {
   console.log(await readOwnVersion())
@@ -36,11 +44,11 @@ if (args.values.version) {
 } else if (!cmd) {
   console.error('error: missing command')
   renderHelp()
-  process.exit(1)
+  process.exitCode = 1
 } else {
   console.error(`unknown command: ${cmd}`)
   renderHelp()
-  process.exit(1)
+  process.exitCode = 1
 }
 
 /**
@@ -60,23 +68,32 @@ async function readOwnVersion() {
  * @param {string[]} argv
  */
 async function render(argv) {
-  const args = parseArgs({
-    args: argv,
-    allowPositionals: true,
-    options: {
-      output: {
-        type: 'string',
-        short: 'o',
+  let args
+  try {
+    args = parseArgs({
+      args: argv,
+      allowPositionals: true,
+      options: {
+        output: {
+          type: 'string',
+          short: 'o',
+        },
       },
-    },
-  })
+    })
+  } catch (/** @type {any} */ err) {
+    console.error(`error: ${err.message}`)
+    renderHelp()
+    process.exitCode = 1
+    return
+  }
   const inputPath = args.positionals[0]
   const outputPath = args.values.output
 
   if (!inputPath) {
     console.error('error: missing required argument <input-file.json>')
     renderHelp()
-    process.exit(1)
+    process.exitCode = 1
+    return
   }
 
   let raw
@@ -90,7 +107,8 @@ async function render(argv) {
         `error: could not read input file: ${inputPath}\n${err.message}`,
       )
     }
-    process.exit(1)
+    process.exitCode = 1
+    return
   }
 
   // Strip a leading UTF-8 byte-order-mark (BOM), if present, so JSON.parse
@@ -102,7 +120,30 @@ async function render(argv) {
     csafDoc = JSON.parse(withoutBom)
   } catch (/** @type {any} */ err) {
     console.error(`error: invalid JSON in ${inputPath}: ${err.message}`)
-    process.exit(1)
+    process.exitCode = 1
+    return
+  }
+
+  // JSON.parse accepts any JSON value at the top level (e.g. `null`, `42`,
+  // `"a string"`, `[1, 2, 3]`), not just objects, so this must be checked
+  // explicitly - a CSAF document has to be an object to have a
+  // `.document.csaf_version` field at all.
+  if (
+    typeof csafDoc !== 'object' ||
+    csafDoc === null ||
+    Array.isArray(csafDoc)
+  ) {
+    console.error(
+      `error: invalid CSAF document in ${inputPath}: expected a JSON object at the top level, got ${
+        csafDoc === null
+          ? 'null'
+          : Array.isArray(csafDoc)
+            ? 'an array'
+            : typeof csafDoc
+      }`,
+    )
+    process.exitCode = 1
+    return
   }
 
   const version = csafDoc.document?.csaf_version
@@ -121,11 +162,13 @@ async function render(argv) {
       console.error(
         `error: unsupported or missing csaf_version: ${JSON.stringify(version)}. Expected "2.0" or "2.1".`,
       )
-      process.exit(1)
+      process.exitCode = 1
+      return
     }
   } catch (/** @type {any} */ err) {
     console.error(`error: failed to render document: ${err.message}`)
-    process.exit(1)
+    process.exitCode = 1
+    return
   }
 
   try {
@@ -138,7 +181,8 @@ async function render(argv) {
     console.error(
       `error: could not write output file: ${outputPath}\n${err.message}`,
     )
-    process.exit(1)
+    process.exitCode = 1
+    return
   }
 }
 
