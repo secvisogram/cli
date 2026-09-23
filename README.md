@@ -52,8 +52,8 @@ secvisogram-render render advisory.json -o advisory.html
 ```
 
 The CSAF version (`2.0` or `2.1`) is read from the document's
-`document.csaf_version` field; there's no separate flag to select it. Any
-other value (or a missing field) is rejected with an error.
+`document.csaf_version` field; there's no separate flag to select it.
+Any other value (or a missing field) is rejected with an error.
 
 The output is a single, self-contained HTML file/string - all CSS is
 inlined into `<style>` tags, so it works fully offline and can be opened
