@@ -19,10 +19,13 @@ const fixture = (/** @type {string} */ name) =>
  * exit code.
  *
  * @param {string[]} args
+ * @param {{ cwd?: string }} [options]
  */
-async function runCli(args) {
+async function runCli(args, options) {
   try {
-    const { stdout, stderr } = await execFileAsync('node', [cliPath, ...args])
+    const { stdout, stderr } = await execFileAsync('node', [cliPath, ...args], {
+      cwd: options?.cwd,
+    })
     return { stdout, stderr, exitCode: 0 }
   } catch (/** @type {any} */ err) {
     return {
@@ -149,6 +152,54 @@ describe('render', () => {
     expect(stderr).toContain(
       'error: unsupported or missing csaf_version: "1.0"',
     )
+  })
+
+  it('exits with a clean error message when the input is valid JSON but not an object (e.g. null)', async () => {
+    const { stdout, stderr, exitCode } = await runCli([
+      'render',
+      fixture('null-input.json'),
+    ])
+    expect(exitCode).toBe(1)
+    expect(stdout).toBe('')
+    expect(stderr).toContain('error: invalid CSAF document')
+    expect(stderr).toContain('got null')
+  })
+
+  it('handles an output path that happens to be identical to the "render" command name', async () => {
+    // Regression test: the top-level dispatcher used to strip *every*
+    // argv entry equal to the command token ("render"), not just the
+    // command token itself, so `-o render` would lose its value. Uses a
+    // bare relative filename (run with cwd set to a scratch dir) to
+    // reproduce the exact string collision, rather than a path that merely
+    // ends with "render".
+    const outDir = await mkdtemp(join(tmpdir(), 'secvisogram-cli-test-'))
+    try {
+      const { stderr, exitCode } = await runCli(
+        ['render', fixture('valid-2.0.json'), '-o', 'render'],
+        { cwd: outDir },
+      )
+      expect(exitCode).toBe(0)
+      expect(stderr).toBe('')
+      const html = await readFile(join(outDir, 'render'), 'utf8')
+      expect(html).toContain('Test Advisory 2.0')
+    } finally {
+      await rm(outDir, { recursive: true, force: true })
+    }
+  })
+
+  it('exits with a clean error message for an unrecognised flag, instead of a raw stack trace', async () => {
+    const { stderr, exitCode } = await runCli([
+      'render',
+      fixture('valid-2.0.json'),
+      '--outptu',
+      'out.html',
+    ])
+    expect(exitCode).toBe(1)
+    expect(stderr).toContain('error:')
+    // A raw Node stack trace would include a "TypeError [ERR_..." style
+    // header and "file://" stack frames - neither should appear.
+    expect(stderr).not.toContain('file://')
+    expect(stderr).not.toMatch(/^\w*Error/m)
   })
 
   it('prints usage and exits with an error when no input file is given', async () => {
