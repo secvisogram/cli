@@ -28,7 +28,7 @@
     "test": "prettier --check . && vitest run"
   },
   "dependencies": {
-    "@secvisogram/html-template": "^0.0.1"
+    "@secvisogram/html-template": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.13.5",
