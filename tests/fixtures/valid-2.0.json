@@ -1,0 +1,29 @@
+{
+  "document": {
+    "title": "Test Advisory 2.0",
+    "category": "csaf_base",
+    "csaf_version": "2.0",
+    "distribution": { "tlp": { "label": "WHITE" } },
+    "lang": "en",
+    "publisher": {
+      "category": "vendor",
+      "name": "Acme Inc",
+      "namespace": "https://example.com"
+    },
+    "tracking": {
+      "id": "ACME-2024-001",
+      "status": "final",
+      "version": "1",
+      "initial_release_date": "2024-01-01T00:00:00Z",
+      "current_release_date": "2024-01-01T00:00:00Z",
+      "revision_history": [
+        {
+          "date": "2024-01-01T00:00:00Z",
+          "number": "1",
+          "summary": "Initial version."
+        }
+      ]
+    }
+  },
+  "vulnerabilities": []
+}
