@@ -21,7 +21,6 @@
     "skipLibCheck": true /* Skip type checking of declaration files. */,
     "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */
   },
-  "references": [{ "path": "../html-template" }],
   "include": ["**/*.js"],
   "exclude": ["node_modules", "build", "dist", "coverage"]
 }
