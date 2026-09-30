@@ -8,13 +8,6 @@ web app - see [issue #606](https://github.com/secvisogram/secvisogram/issues/606
 It uses [`@secvisogram/html-template`](https://github.com/secvisogram/html-template)
 for the actual rendering, and is a thin wrapper around it.
 
-> [!NOTE]
-> This package is not yet published to npm. Until it is, `npm install` only
-> works from a checkout that also has a sibling `../html-template` checkout
-> present (see [Development](#development)) - `@secvisogram/html-template`
-> is currently referenced via a `file:../html-template` dependency, not a
-> published version.
-
 ## Installation
 
 ```sh
@@ -82,12 +75,7 @@ On success, it exits with `0`.
 
 ## Development
 
-This package depends on [`@secvisogram/html-template`](https://github.com/secvisogram/html-template)
-via a local `file:../html-template` path (see the note above), so it
-currently needs to be checked out as a sibling directory:
-
 ```sh
-git clone https://github.com/secvisogram/html-template ../html-template
 git clone https://github.com/secvisogram/cli
 cd cli
 npm install
